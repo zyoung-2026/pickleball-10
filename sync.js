@@ -18,7 +18,7 @@ const val=(id)=>{
  const k=id.substring((event+'__').length);
  if(k.startsWith('name_')) return state.names[Number(k.slice(5))]||'';
  const m=/^score_(\d+)_(\d+)$/.exec(k);if(!m)return '';
- const v=state.scores[+m[1]][+m[2]];return v===null?'':String(v);
+ const v=state.scores?.[+m[1]]?.[+m[2]];return v===null||v===undefined?'':String(v);
 };
 const previous=new Map();const pending=new Map();let loading=true, writing=false, retry=null, readBusy=false;
 const oldPersist=persist;
@@ -38,7 +38,7 @@ function applyCloud(rows){
  previous.set(id,remote);
  const k=id.substring((event+'__').length);
  if(k.startsWith('name_'))state.names[Number(k.slice(5))]=remote;
- else{const a=/^score_(\d+)_(\d+)$/.exec(k);if(a)state.scores[+a[1]][+a[2]]=remote===''?null:Number(remote)}
+ else{const a=/^score_(\d+)_(\d+)$/.exec(k);if(a){const i=Number(a[1]),t=Number(a[2]);if(i>=0&&i<9&&t>=0&&t<2){if(!Array.isArray(state.scores))state.scores=[];if(!Array.isArray(state.scores[i]))state.scores[i]=[null,null];state.scores[i][t]=remote===''?null:Number(remote)}}}
  }
  oldPersist();
  // 현재 점수 칸을 편집하는 도중에는 화면 재그리기로 입력을 끊지 않습니다.
@@ -52,6 +52,7 @@ async function fetchCloud(){
  if(readBusy)return;readBusy=true;
  try{
   const rows=await request(base+'?select=id,value&id=in.('+ids.map(encodeURIComponent).join(',')+')');
+  if(!Array.isArray(rows))throw Error('서버 응답 형식이 올바르지 않습니다');
   applyCloud(rows);loading=false;
   if(pending.size){say('⏳ 미저장 변경사항 다시 저장 중…');flush()}
   else say('✅ 공용 데이터 연결됨 · 30초마다 자동 새로고침 · 입력하면 서버 저장','ok');

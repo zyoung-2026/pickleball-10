@@ -6,12 +6,13 @@ const banner=document.getElementById('syncBanner');
 const say=(text,kind='info')=>{banner.textContent=text;banner.style.background=kind==='error'?'#ffe8e5':kind==='ok'?'#dff5e9':'#fff1d5';banner.style.color=kind==='error'?'#96392e':kind==='ok'?'#136747':'#805017'};
 if(!valid){say('⚠ 서버 설정 전: 이 화면의 기록은 이 기기에만 저장됩니다. config.js에 Supabase 주소와 공개용 키를 설정하세요.','error');return}
 const base=cfg.SUPABASE_URL.replace(/\/$/,'')+'/rest/v1/pickleball_cells';
-const event=String(cfg.EVENT_ID||'pickleball-10-main');
+// 9명 경기 전용 데이터로 구별: 기존 10명 경기 기록은 건드리지 않습니다.
+const event=String(cfg.EVENT_ID||'pickleball-10-main')+'__nine';
 const headers={'apikey':cfg.SUPABASE_ANON_KEY,'Authorization':'Bearer '+cfg.SUPABASE_ANON_KEY};
 const cellId=(kind,i,t)=>event+'__'+kind+'_'+i+(t===undefined?'':'_'+t);
 const ids=[];
-for(let i=0;i<10;i++)ids.push(cellId('name',i));
-for(let i=0;i<20;i++)for(let t=0;t<2;t++)ids.push(cellId('score',i,t));
+for(let i=0;i<9;i++)ids.push(cellId('name',i));
+for(let i=0;i<9;i++)for(let t=0;t<2;t++)ids.push(cellId('score',i,t));
 const idset=new Set(ids);
 const val=(id)=>{
  const k=id.substring((event+'__').length);
